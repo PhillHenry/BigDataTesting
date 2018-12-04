@@ -9,20 +9,21 @@ import org.apache.hive.service.cli.CLIService
 import org.apache.hive.service.server.HiveServer2
 import uk.co.odinconsultants.htesting.local.TestingFileUtils.tmpDirectory
 import uk.co.odinconsultants.htesting.local.{PortUtils, TestingFileUtils}
+import uk.co.odinconsultants.htesting.log.Logging
 import uk.co.odinconsultants.htesting.spark.SparkForTesting
 
-object HiveForTesting {
+object HiveForTesting extends Logging {
 
-  println("WARNING! This test harness does not (yet) respect the metastore")
+  info("WARNING! This test harness does not (yet) respect the metastore")
 
   val hiveThriftPort = PortUtils()
-  println(s"thrift port = $hiveThriftPort")
+  info(s"thrift port = $hiveThriftPort")
 
   val hiveConf    = new HiveConf()
   hiveConf.set("datanucleus.schema.autoCreateAll",    "false")
   hiveConf.setBoolVar(ConfVars.HIVE_SERVER2_ACTIVE_PASSIVE_HA_ENABLE, true)
   val webGui = PortUtils()
-  println(s"Hive web gui running on port $webGui")
+  info(s"Hive web gui running on port $webGui")
   hiveConf.setIntVar(ConfVars.HIVE_SERVER2_WEBUI_PORT, webGui)
   // see https://stackoverflow.com/questions/43180305/cannot-connect-to-hive-using-beeline-user-root-cannot-impersonate-anonymous
   hiveConf.set("hadoop.proxyuser.hive.groups",        "*")
@@ -36,10 +37,10 @@ object HiveForTesting {
   hiveConf.set("hive.execution.engine",               "spark")
   hiveConf.set("hive.server2.thrift.port",            hiveThriftPort.toString)
   hiveConf.set("spark.master",                        SparkForTesting.master)
-  println("Hive conf: " + hiveConf.getAllProperties)
+  info("Hive conf: " + hiveConf.getAllProperties)
 
   val derbyHome: String = tmpDirectory("derby").getAbsolutePath
-  println(s"Setting Derby Home to be $derbyHome")
+  info(s"Setting Derby Home to be $derbyHome")
   System.setProperty("derby.system.home", derbyHome)
 
   SparkHacks.hackSparkSubmitClass()
@@ -47,7 +48,7 @@ object HiveForTesting {
   val metaStoreDir = {
     HiveForTesting.getClass.getResource("/").getPath + s"${separator}..${separator}..${separator}src${separator}main${separator}resources${separator}metastore${separator}"
   }
-  println("Using metastore directory: " + metaStoreDir)
+  info("Using metastore directory: " + metaStoreDir)
   MetastoreSchemaTool.homeDir = metaStoreDir
   assert(MetastoreSchemaTool.run("--verbose -initSchema -dbType derby".split(" ")) == 0)
 
@@ -68,7 +69,7 @@ object HiveForTesting {
   Class.forName("org.apache.hive.jdbc.HiveDriver")
 
   def main(args: Array[String]): Unit = { // smoke test
-    println("Hive started. CLI = " + hiveCli)
+    info("Hive started. CLI = " + hiveCli)
     System.exit(0)
   }
 

@@ -1,6 +1,8 @@
 package uk.co.odinconsultants.htesting.hive
 
-object SparkHacks {
+import uk.co.odinconsultants.htesting.log.Logging
+
+object SparkHacks extends Logging {
 
   def hackSparkSubmitClass(): Class[_] = {
     val sparkSubmitClass: Class[_] = Class.forName("org.apache.spark.deploy.SparkSubmit")
@@ -9,7 +11,7 @@ object SparkHacks {
   }
 
   def main(args: Array[String]): Unit = {
-    println(hackSparkSubmitClass().newInstance())
+    info(hackSparkSubmitClass().newInstance())
   }
 
 }

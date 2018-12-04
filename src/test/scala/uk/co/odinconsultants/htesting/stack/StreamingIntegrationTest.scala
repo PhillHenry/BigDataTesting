@@ -16,8 +16,9 @@ import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery}
 import org.scalatest.{Matchers, WordSpec}
 import uk.co.odinconsultants.htesting.kafka.{KafkaStarter, ZookeeperSetUp}
+import uk.co.odinconsultants.htesting.log.Logging
 
-class StreamingIntegrationTest extends WordSpec with Matchers {
+class StreamingIntegrationTest extends WordSpec with Matchers with Logging {
 
   type StreamType = Dataset[(String, String, java.sql.Date)]
 
@@ -46,7 +47,7 @@ class StreamingIntegrationTest extends WordSpec with Matchers {
     val today     = new java.sql.Date(new java.util.Date().getTime)
     val yesterday = new java.sql.Date(today.getTime - (3600 * 1000 * 24))
     df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)").as[(String, String)].map { case (key, value) =>
-      println(s"key = $key")
+      info(s"key = $key")
       COUNTER.incrementAndGet()
       (key, value, if (math.random < 0.5) today else yesterday)
     }.withColumnRenamed("_1", "key").withColumnRenamed("_2", "value").withColumnRenamed("_3", partitionField).asInstanceOf[StreamType]
@@ -54,7 +55,7 @@ class StreamingIntegrationTest extends WordSpec with Matchers {
 
   "Full Kafka, ZooKeeper, Spark and HDFS stack" should {
     "play nicely" in {
-      println(HiveForTesting.hiveServer)
+      info(HiveForTesting.hiveServer)
 
       val topicName   = "topicName"
       val kafkaPort   = PortUtils()
@@ -90,13 +91,13 @@ class StreamingIntegrationTest extends WordSpec with Matchers {
   }
 
   private def ensureMesagesSent(streamingQuery: StreamingQuery) = {
-    println("Sleeping waiting for Spark")
+    info("Sleeping waiting for Spark")
     streamingQuery.processAllAvailable()
     streamingQuery.exception.foreach { x =>
       x.printStackTrace()
       fail(x)
     }
-    println("Recent progress: " + streamingQuery.recentProgress.size)
+    info("Recent progress: " + streamingQuery.recentProgress.size)
     Thread.sleep(10000)
   }
 
@@ -109,7 +110,7 @@ class StreamingIntegrationTest extends WordSpec with Matchers {
     import java.sql.DriverManager
     val con         = DriverManager.getConnection(s"jdbc:hive2://localhost:${HiveForTesting.hiveThriftPort}/default", "", "")
     val stmt        = con.createStatement
-    System.out.println("Running: " + sql)
+    info("Running: " + sql)
     stmt.execute(sql)
     //    Thread.sleep(Long.MaxValue)
     recognisePartitions(files, table_name, stmt)
@@ -122,28 +123,17 @@ class StreamingIntegrationTest extends WordSpec with Matchers {
     val res = stmt.executeQuery("select count(*) from " + table_name)
     res.next() shouldBe true
     val count = res.getInt(1)
-    println(s"Hive count = $count")
+    info(s"Hive count = $count")
     count
   }
 
   private def recognisePartitions(files: List[Path], table_name: String, stmt: Statement): Unit = {
     stmt.execute(s"MSCK REPAIR TABLE  $table_name")
-    //    val keyDirs = files.map(_.toString).filter(_.contains(partitionField)).map { file =>
-    //      val dir       = file.substring(0, file.lastIndexOf("/"))
-    //      val partition = dir.substring(dir.lastIndexOf("/") + 1)
-    //      val key       = partition.substring(partition.indexOf("=") + 1)
-    //      (key, dir)
-    //    }
-    //    keyDirs.toSet[(String, String)].foreach { case (key, dir) =>
-    //      val sql = s"ALTER TABLE $table_name ADD PARTITION (partitionKey='$key') location '$dir'"
-    //      println(s"Running: $sql")
-    //      stmt.execute(sql)
-    //    }
   }
 
   private def checkSparkProcessedMessages(sinkFile: String): List[Path] = {
     val actualFiles = list(hdfsUri + sinkFile)
-    println(s"Files in $sinkFile:\n${actualFiles.mkString("\n")}")
+    info(s"Files in $sinkFile:\n${actualFiles.mkString("\n")}")
     actualFiles should not be empty
     actualFiles
   }
@@ -152,7 +142,7 @@ class StreamingIntegrationTest extends WordSpec with Matchers {
     val aMsg = "A" * 10240
     val futures = (1 to n).map { i =>
       val future = producer.send(new ProducerRecord[String, String](topicName, i.toString, aMsg), new Callback {
-        override def onCompletion(metadata: RecordMetadata, x: Exception) = {} //println(s"onCompletion: $metadata $x")
+        override def onCompletion(metadata: RecordMetadata, x: Exception) = {}
       })
       future
     }
