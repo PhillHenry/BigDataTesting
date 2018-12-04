@@ -9,7 +9,7 @@ object HadoopForTesting {
   val BINARY_DIRECTORY: String = {
     val location    = classOf[HadoopForTesting].getProtectionDomain.getCodeSource.getLocation.getFile.replace("/", separator)
     val minusTarge  = location.substring(0, location.indexOf("target"))
-    val path        = (minusTarge + "src" + separator + "test" + separator + "resources" + separator).substring(1)
+    val path        = (minusTarge + "src" + separator + "main" + separator + "resources" + separator).substring(1)
     println(s"PH: path = $path")
     path
   }
