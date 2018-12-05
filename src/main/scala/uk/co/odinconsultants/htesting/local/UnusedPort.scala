@@ -2,7 +2,7 @@ package uk.co.odinconsultants.htesting.local
 
 import java.net.ServerSocket
 
-object PortUtils {
+object UnusedPort {
 
   def apply(): Int = {
     val socket = new ServerSocket(0)

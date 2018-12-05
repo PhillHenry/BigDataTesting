@@ -8,21 +8,19 @@ import org.apache.hadoop.hive.metastore.tools.MetastoreSchemaTool
 import org.apache.hive.service.cli.CLIService
 import org.apache.hive.service.server.HiveServer2
 import uk.co.odinconsultants.htesting.local.TestingFileUtils.tmpDirectory
-import uk.co.odinconsultants.htesting.local.{PortUtils, TestingFileUtils}
+import uk.co.odinconsultants.htesting.local.{UnusedPort, TestingFileUtils}
 import uk.co.odinconsultants.htesting.log.Logging
 import uk.co.odinconsultants.htesting.spark.SparkForTesting
 
 object HiveForTesting extends Logging {
 
-  info("WARNING! This test harness does not (yet) respect the metastore")
-
-  val hiveThriftPort = PortUtils()
+  val hiveThriftPort = UnusedPort()
   info(s"thrift port = $hiveThriftPort")
 
   val hiveConf    = new HiveConf()
   hiveConf.set("datanucleus.schema.autoCreateAll",    "false")
   hiveConf.setBoolVar(ConfVars.HIVE_SERVER2_ACTIVE_PASSIVE_HA_ENABLE, true)
-  val webGui = PortUtils()
+  val webGui = UnusedPort()
   info(s"Hive web gui running on port $webGui")
   hiveConf.setIntVar(ConfVars.HIVE_SERVER2_WEBUI_PORT, webGui)
   // see https://stackoverflow.com/questions/43180305/cannot-connect-to-hive-using-beeline-user-root-cannot-impersonate-anonymous
@@ -48,6 +46,7 @@ object HiveForTesting extends Logging {
   val metaStoreDir = {
     HiveForTesting.getClass.getResource("/").getPath + s"${separator}..${separator}..${separator}src${separator}main${separator}resources${separator}metastore${separator}"
   }
+
   info("Using metastore directory: " + metaStoreDir)
   MetastoreSchemaTool.homeDir = metaStoreDir
   assert(MetastoreSchemaTool.run("--verbose -initSchema -dbType derby".split(" ")) == 0)
@@ -55,7 +54,6 @@ object HiveForTesting extends Logging {
   val hiveServer  = new HiveServer2()
   hiveServer.init(hiveConf)
   hiveServer.start()
-
 
   val hiveCli: CLIService = {
     import scala.collection.JavaConversions._

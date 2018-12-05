@@ -5,10 +5,11 @@ import java.util.Properties
 import kafka.server.{KafkaConfig, KafkaServerStartable}
 import org.apache.kafka.clients.admin.{AdminClient, NewTopic}
 import org.apache.kafka.clients.producer.{KafkaProducer, Producer}
-import uk.co.odinconsultants.htesting.kafka.KafkaSetUp._
 import uk.co.odinconsultants.htesting.local.TestingFileUtils._
 
 case class KafkaStarter(hostname: String, kPort: Int, zkPort: Int, topicName: String) {
+
+  def toLocalEndPoint(hostname: String, port: Int) = s"$hostname:$port"
 
   val props = new Properties()
   props.put("zookeeper.connect",                toLocalEndPoint(hostname, zkPort))
@@ -20,7 +21,7 @@ case class KafkaStarter(hostname: String, kPort: Int, zkPort: Int, topicName: St
   props.put("key.serializer",                   classOf[org.apache.kafka.common.serialization.StringSerializer].getName)
   props.put("value.serializer",                 classOf[org.apache.kafka.common.serialization.StringSerializer].getName)
   props.put("offsets.topic.replication.factor", "1")
-  props.put("auto.offset.reset",               "earliest")
+  props.put("auto.offset.reset",                "earliest")
 
   def startKafka(): KafkaServerStartable = {
     val server = new KafkaServerStartable(new KafkaConfig(props))
@@ -39,17 +40,3 @@ case class KafkaStarter(hostname: String, kPort: Int, zkPort: Int, topicName: St
 
 }
 
-object KafkaSetUp {
-
-  def apply(hostname: String, kPort: Int, zkPort: Int, topicName: String): KafkaServerStartable = {
-    new KafkaStarter(hostname, kPort, zkPort, topicName).startKafka()
-  }
-
-  def kafkaConf(hostname: String, zkPort: Int): Map[String, String] = Map(
-    "auto.offset.reset" -> "smallest",
-    "metadata.broker.list" -> toLocalEndPoint(hostname, zkPort))
-
-
-  def toLocalEndPoint(hostname: String, port: Int) = s"$hostname:$port"
-
-}

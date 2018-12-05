@@ -16,8 +16,8 @@ object HdfsForTesting extends Logging {
   conf.set("hadoop.proxyuser.hive.groups",        "*")
   conf.set("hadoop.proxyuser.hive.hosts",         "*")
   val user = System.getProperty("user.name")
-  conf.set(s"hadoop.proxyuser.$user.groups",        "*")
-  conf.set(s"hadoop.proxyuser.$user.hosts",        "*")
+  conf.set(s"hadoop.proxyuser.$user.groups",      "*")
+  conf.set(s"hadoop.proxyuser.$user.hosts",       "*")
   conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, baseDir.getAbsolutePath)
   val builder = new MiniDFSCluster.Builder(conf)
 

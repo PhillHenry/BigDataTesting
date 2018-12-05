@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 import uk.co.odinconsultants.htesting.hdfs.HdfsForTesting._
-import uk.co.odinconsultants.htesting.local.PortUtils
+import uk.co.odinconsultants.htesting.local.UnusedPort
 import uk.co.odinconsultants.htesting.hive.HiveForTesting
 import uk.co.odinconsultants.htesting.stack.StreamingIntegrationTest.COUNTER
 import uk.co.odinconsultants.htesting.spark.SparkForTesting._
@@ -17,49 +17,52 @@ import org.apache.spark.sql.streaming.{OutputMode, StreamingQuery}
 import org.scalatest.{Matchers, WordSpec}
 import uk.co.odinconsultants.htesting.kafka.{KafkaStarter, ZookeeperSetUp}
 import uk.co.odinconsultants.htesting.log.Logging
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class StreamingIntegrationTest extends WordSpec with Matchers with Logging {
 
   type StreamType = Dataset[(String, String, java.sql.Date)]
 
   val partitionField = "partitionkey"
 
-  private def dfWrite(df: StreamType, sinkFile: String): StreamingQuery = {
-    val sinkURL = hdfsUri + sinkFile
-    val checkpointFilename = hdfsUri + "checkpoint"
-    val streamingQuery = df.writeStream.format("parquet")
+  private def streamingTo(df: StreamType, sinkFile: String): StreamingQuery = {
+    val sinkURL             = hdfsUri + sinkFile
+    val checkpointFilename  = hdfsUri + "checkpoint"
+    val streamingQuery      = df.writeStream.format("parquet")
       .outputMode(OutputMode.Append())
-      .option("path", sinkURL)
+      .option("path",               sinkURL)
       .option("checkpointLocation", checkpointFilename)
       .partitionBy(partitionField)
       .start()
     streamingQuery
   }
 
-  private def dfRead(topicName: String, port: Int, hostname: String): StreamType = {
+  private def streamingFrom(topicName: String, kafkaPort: Int, kafkaHostname: String): StreamType = {
     val df = session
       .readStream
       .format("kafka")
-      .option("kafka.bootstrap.servers", s"$hostname:$port")
-      .option("subscribe", topicName)
+      .option("kafka.bootstrap.servers",  s"$kafkaHostname:$kafkaPort")
+      .option("subscribe",                topicName)
       .load()
     import df.sqlContext.implicits._
     val today     = new java.sql.Date(new java.util.Date().getTime)
     val yesterday = new java.sql.Date(today.getTime - (3600 * 1000 * 24))
     df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)").as[(String, String)].map { case (key, value) =>
-      info(s"key = $key")
+//      info(s"key = $key")
       COUNTER.incrementAndGet()
       (key, value, if (math.random < 0.5) today else yesterday)
     }.withColumnRenamed("_1", "key").withColumnRenamed("_2", "value").withColumnRenamed("_3", partitionField).asInstanceOf[StreamType]
   }
 
-  "Full Kafka, ZooKeeper, Spark and HDFS stack" should {
+  "Full Kafka, ZooKeeper, Spark, Hive and HDFS stack" should {
     "play nicely" in {
       info(HiveForTesting.hiveServer)
 
       val topicName   = "topicName"
-      val kafkaPort   = PortUtils()
-      val zkPort      = PortUtils()
+      val kafkaPort   = UnusedPort()
+      val zkPort      = UnusedPort()
       val hostname    = "localhost"
       val zooKeeper   = ZookeeperSetUp(hostname, zkPort)
       val kafkaEnv    = new KafkaStarter(hostname, kafkaPort, zkPort, topicName)
@@ -83,8 +86,8 @@ class StreamingIntegrationTest extends WordSpec with Matchers with Logging {
   }
 
   def sendMessagesToKafkaSpark(kafkaEnv: KafkaStarter, sinkFile: String): StreamingQuery = {
-    val df              = dfRead(kafkaEnv.topicName, kafkaEnv.kPort, kafkaEnv.hostname)
-    val streamingQuery  = dfWrite(df, sinkFile)
+    val df              = streamingFrom(kafkaEnv.topicName, kafkaEnv.kPort, kafkaEnv.hostname)
+    val streamingQuery  = streamingTo(df, sinkFile)
     val nMessages       = 10000
     sendMessagesSynchronously(kafkaEnv.topicName, kafkaEnv.producer(), nMessages)
     streamingQuery
