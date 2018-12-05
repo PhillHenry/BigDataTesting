@@ -1,4 +1,4 @@
-package co.uk.odinconsultants.spark
+package uk.co.odinconsultants.htesting.hdfs
 
 import java.io.File.separator
 

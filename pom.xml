@@ -14,8 +14,6 @@
     <scala.version>2.11.5</scala.version>
     <scala.compat.version>2.11</scala.compat.version>
     <spark.version>2.4.0</spark.version>
-    <!-- <deeplearning4j.version>0.9.1</deeplearning4j.version> -->
-    <nd4j.version>0.9.1</nd4j.version>
     <kafka.version>2.0.0</kafka.version>
     <hadoop.version>2.6.5</hadoop.version>
     <hive.version>3.1.1</hive.version>

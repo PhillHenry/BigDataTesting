@@ -5,7 +5,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 object SparkForTesting {
 
-  import co.uk.odinconsultants.spark.HadoopForTesting._
+  import uk.co.odinconsultants.htesting.hdfs.HadoopForTesting._
 
   info("Using binaries in " + WINDOWS_BINARY_DIRECTORY)
 
