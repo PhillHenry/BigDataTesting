@@ -1,5 +1,9 @@
 package uk.co.odinconsultants.htesting.spark.files
 
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.Path
+import org.apache.parquet.format.converter.ParquetMetadataConverter
+import org.apache.parquet.hadoop.ParquetFileReader
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpec}
@@ -32,7 +36,18 @@ class PartitionAndSortFile extends WordSpec with Matchers {
       df.sort(text).write.partitionBy(partitionkey).parquet(filename)
 
 
-      println("Files:\n" + list(filename).mkString("\n"))
+      val files = list(filename)
+      println("Files:\n" + files.mkString("\n"))
+      files.filter(_.toString.endsWith(".parquet")).foreach { file =>
+        val reader = ParquetFileReader.readFooter(new Configuration(), file, ParquetMetadataConverter.NO_FILTER)
+        println("Reader = " + reader)
+        import scala.collection.JavaConversions._
+        import scala.collection.JavaConverters._
+        println("blocks = " + reader.getBlocks)
+        println("blocks = " + reader.getBlocks.toList.mkString("\n"))
+        println("stats:")
+        reader.getBlocks.toList.foreach(x => println(x.getColumns.toList.foreach(_.getStatistics)))
+      }
     }
   }
 
