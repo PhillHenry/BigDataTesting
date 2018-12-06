@@ -69,6 +69,18 @@ class PartitionAndSortFile extends WordSpec with Matchers {
       checkOrdered(fromHdfs, intKey, nSlots)
       checkOrdered(df, intKey, nSlots)
 //      checkOrdered(data.toDF("id", text, partitionkey, intKey), intKey, nSlots, index = 3) // this blows up though. Seems DataFrame needs to be persisted for the sort to take effect
+
+      val query = fromHdfs.where(s"$intKey == 3")
+      query.explain()
+      /*
+== Physical Plan ==
+*(1) Project [id#21, text#22, intkey#23, partitionkey#24]
++- *(1) Filter (isnotnull(intkey#23) && (intkey#23 = 3))
+   +- *(1) FileScan parquet [id#21,text#22,intkey#23,partitionkey#24] Batched: true, Format: Parquet, Location: InMemoryFileIndex[hdfs://127.0.0.1:41684/1544107487759], PartitionCount: 2, PartitionFilters: [], PushedFilters: [IsNotNull(intkey), EqualTo(intkey,3)], ReadSchema: struct<id:int,text:string,intkey:int>
+
+Note that the PushedFilters shows we're using Predicate Pushdown
+       */
+      query.show()
     }
   }
 
