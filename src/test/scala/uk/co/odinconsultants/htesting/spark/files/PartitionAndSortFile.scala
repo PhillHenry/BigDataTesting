@@ -5,6 +5,7 @@ import org.apache.hadoop.fs.Path
 import org.apache.parquet.format.converter.ParquetMetadataConverter
 import org.apache.parquet.hadoop.ParquetFileReader
 import org.apache.parquet.hadoop.metadata.BlockMetaData
+import org.apache.spark.sql.{DataFrame, Dataset}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpec}
@@ -65,21 +66,27 @@ class PartitionAndSortFile extends WordSpec with Matchers {
 
 //      Thread.sleep(Long.MaxValue)
 
+      checkOrdered(fromHdfs, intKey, nSlots)
+      checkOrdered(df, intKey, nSlots)
+//      checkOrdered(data.toDF("id", text, partitionkey, intKey), intKey, nSlots, index = 3) // this blows up though. Seems DataFrame needs to be persisted for the sort to take effect
+    }
+  }
 
-      val intsPerPartition = fromHdfs.mapPartitions { xs =>
-        val ids = xs.map { _.getInt(2) }.toSet
-        Iterator(ids)
-      }
+  def checkOrdered(df: DataFrame, intKey: String, nSlots: Int, index: Int = 2): Unit = {
+    import df.sqlContext.implicits._
+    val intsPerPartition = df.mapPartitions { xs =>
+      val ids = xs.map { _.getInt(index) }.toSet
+      Iterator(ids)
+    }
 
-      println(intKey + ": " + fromHdfs.map {_.getInt(2) }.distinct().collect().mkString(", "))
+    println(intKey + ": " + df.map {_.getInt(index) }.distinct().collect().mkString(", "))
 
-      val inMem: Array[Set[Int]] = intsPerPartition.collect()
-      val nPartitions = fromHdfs.rdd.partitions.size
-      val expectedNumPerSlot = nSlots / nPartitions
-      println(s"number of partitions = $nPartitions, expected number per slot = $expectedNumPerSlot, sizes = ${inMem.map(_.size).mkString(", ")}")
-      withClue(s"ints in a given partition:\n${inMem.mkString("\n")}\nExpected number = $expectedNumPerSlot\nNum of partitions = $nPartitions") {
-        inMem.foreach { _.size shouldBe expectedNumPerSlot +- expectedNumPerSlot.toInt }
-      }
+    val inMem: Array[Set[Int]] = intsPerPartition.collect()
+    val nPartitions = df.rdd.partitions.size
+    val expectedNumPerSlot = nSlots / nPartitions
+    println(s"number of partitions = $nPartitions, expected number per slot = $expectedNumPerSlot, sizes = ${inMem.map(_.size).mkString(", ")}\n")
+    withClue(s"ints in a given partition:\n${inMem.mkString("\n")}\nExpected number = $expectedNumPerSlot\nNum of partitions = $nPartitions") {
+      inMem.foreach { _.size shouldBe expectedNumPerSlot +- expectedNumPerSlot.toInt }
     }
   }
 
