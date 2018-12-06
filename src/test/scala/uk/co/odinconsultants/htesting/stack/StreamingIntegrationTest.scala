@@ -75,6 +75,11 @@ class StreamingIntegrationTest extends WordSpec with Matchers with Logging {
 
       val files       = checkSparkProcessedMessages(sinkFile)
 
+      files.filter(_.toString.endsWith(".parquet")).foreach { f =>
+        val df = session.read.parquet(f.toString)
+        println(s"df.count = ${df.count()}")
+      }
+
       COUNTER.get() should be > (0)
       val sparkCount  = session.read.parquet(hdfsUri + sinkFile).count()
       val hiveCount   = talkToHive(sinkFile, files)
