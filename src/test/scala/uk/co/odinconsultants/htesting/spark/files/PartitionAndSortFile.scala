@@ -18,7 +18,7 @@ class PartitionAndSortFile extends WordSpec with Matchers {
   "partition and sorting" should {
     "be seen in parquet files" in {
       import session.implicits._
-      val nSlots        = 200
+      val nSlots        = 20
       val data          = (1 to 10000).map(i => (i, (('A' + i % 25).toString * 1024).toString, i % 2, i % nSlots))
       println("data head: " + data.head)
       val partitionkey  = "partitionkey"
@@ -37,6 +37,7 @@ class PartitionAndSortFile extends WordSpec with Matchers {
       // 'save' does not support bucketBy and sortBy right now;
 //      df.write.partitionBy(partitionkey).sortBy(text).bucketBy(10, text).parquet(filename)
 
+//      df.sort(intKey).write.partitionBy(partitionkey).parquet(filename)
 
       df.sort(intKey).write.partitionBy(partitionkey).parquet(filename)
 
@@ -47,7 +48,7 @@ class PartitionAndSortFile extends WordSpec with Matchers {
 
       println("Schema: ")
       fromHdfs.printSchema() // Note the schema changes. The partition key goes to the end of the list of columns
-
+      files.length shouldBe > (1)
 
       files.foreach { file =>
         val conf = new Configuration()
@@ -62,6 +63,10 @@ class PartitionAndSortFile extends WordSpec with Matchers {
         reader.getBlocks.toList.foreach(blockMetaData => println(blockMetaData.getColumns.toList.foreach(_.getStatistics)))
         println("Columns")
         reader.getBlocks.toList.foreach(blockMetaData => println(blockMetaData.getColumns.toList.mkString("\n")))
+        val singleDF = session.read.parquet(file.toString)
+
+        // see https://stackoverflow.com/questions/45178991/calculate-min-max-using-spark-dataframe-and-vertically-align-output
+        singleDF.describe().show() // this indeed does show the stats
       }
 
 //      Thread.sleep(Long.MaxValue)
