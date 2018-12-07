@@ -45,6 +45,8 @@ class StreamingIntegrationTest extends WordSpec with Matchers with Logging {
       .format("kafka")
       .option("kafka.bootstrap.servers",  s"$kafkaHostname:$kafkaPort")
       .option("subscribe",                topicName)
+      .option("offset",                   "earliest")
+      .option("startingOffsets",          "earliest")
       .load()
     import df.sqlContext.implicits._
     val today     = new java.sql.Date(new java.util.Date().getTime)
@@ -79,6 +81,8 @@ class StreamingIntegrationTest extends WordSpec with Matchers with Logging {
         val df = session.read.parquet(f.toString)
         println(s"df.count = ${df.count()}")
       }
+
+      info(s"ZK port = $zkPort, kafka port = $kafkaPort")
 
       COUNTER.get() should be > (0)
       val sparkCount  = session.read.parquet(hdfsUri + sinkFile).count()

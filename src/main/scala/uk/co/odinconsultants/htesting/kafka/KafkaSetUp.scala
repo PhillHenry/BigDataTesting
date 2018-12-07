@@ -22,6 +22,8 @@ case class KafkaStarter(hostname: String, kPort: Int, zkPort: Int, topicName: St
   props.put("value.serializer",                 classOf[org.apache.kafka.common.serialization.StringSerializer].getName)
   props.put("offsets.topic.replication.factor", "1")
   props.put("auto.offset.reset",                "earliest")
+  props.put("host.name",                        hostname)
+  props.put("advertised.host.name",             hostname)
 
   def startKafka(): KafkaServerStartable = {
     val server = new KafkaServerStartable(new KafkaConfig(props))

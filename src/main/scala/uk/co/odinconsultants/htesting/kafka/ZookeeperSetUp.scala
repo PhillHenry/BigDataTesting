@@ -12,6 +12,7 @@ class ZookeeperStarter() {
     val zookeeper = new ZooKeeperServer(tmpDirectory("zkShapshotDir"), tmpDirectory("zkLogs"), 1000)
     val zk = ServerCnxnFactory.createFactory(new InetSocketAddress(localhost, zkPort), 10)
     zk.startup(zookeeper)
+    println("ZK address = " + zk.getLocalAddress)
     zk
   }
 
