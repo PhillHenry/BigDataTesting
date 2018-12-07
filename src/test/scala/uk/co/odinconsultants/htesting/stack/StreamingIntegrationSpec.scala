@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import uk.co.odinconsultants.htesting.hdfs.HdfsForTesting._
 import uk.co.odinconsultants.htesting.local.UnusedPort
 import uk.co.odinconsultants.htesting.hive.HiveForTesting
-import uk.co.odinconsultants.htesting.stack.StreamingIntegrationTest.COUNTER
+import uk.co.odinconsultants.htesting.stack.StreamingIntegrationSpec.COUNTER
 import uk.co.odinconsultants.htesting.spark.SparkForTesting._
 import org.apache.hadoop.fs.Path
 import org.apache.kafka.clients.producer.{Callback, Producer, ProducerRecord, RecordMetadata}
@@ -21,7 +21,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class StreamingIntegrationTest extends WordSpec with Matchers with Logging {
+class StreamingIntegrationSpec extends WordSpec with Matchers with Logging {
 
   type StreamType = Dataset[(String, String, java.sql.Date)]
 
@@ -162,6 +162,6 @@ class StreamingIntegrationTest extends WordSpec with Matchers with Logging {
   }
 }
 
-object StreamingIntegrationTest {
+object StreamingIntegrationSpec {
   val COUNTER = new AtomicInteger(0)
 }

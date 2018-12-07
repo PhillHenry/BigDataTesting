@@ -14,7 +14,7 @@ import org.scalatest.{Matchers, WordSpec}
 import uk.co.odinconsultants.htesting.hdfs.HdfsForTesting._
 import uk.co.odinconsultants.htesting.local.UnusedPort
 import uk.co.odinconsultants.htesting.spark.SparkForTesting.session
-import uk.co.odinconsultants.htesting.stack.StreamingIntegrationTest.COUNTER
+import uk.co.odinconsultants.htesting.stack.StreamingIntegrationSpec.COUNTER
 
 import scala.io.Source
 

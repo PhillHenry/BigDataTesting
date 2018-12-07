@@ -13,7 +13,7 @@ import uk.co.odinconsultants.htesting.hdfs.HdfsForTesting._
 import uk.co.odinconsultants.htesting.spark.SparkForTesting._
 
 @RunWith(classOf[JUnitRunner])
-class PartitionAndSortFile extends WordSpec with Matchers {
+class PartitionAndSortFileSpec extends WordSpec with Matchers {
 
   "partition and sorting" should {
     "be seen in parquet files" in {
