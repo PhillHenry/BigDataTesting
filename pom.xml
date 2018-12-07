@@ -150,6 +150,7 @@
           <!-- useManifestOnlyJar>false</useManifestOnlyJar -->
           <includes>
             <include>**/*Test.*</include>
+            <include>**/*Spec.*</include>
             <include>**/*Suite.*</include>
           </includes>
         </configuration>
