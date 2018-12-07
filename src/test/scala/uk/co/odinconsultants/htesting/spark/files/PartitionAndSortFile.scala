@@ -18,8 +18,9 @@ class PartitionAndSortFile extends WordSpec with Matchers {
   "partition and sorting" should {
     "be seen in parquet files" in {
       import session.implicits._
-      val nSlots        = 20
-      val data          = (1 to 10000).map(i => (i, (('A' + i % 25).toString * 1024).toString, i % 2, i % nSlots))
+      val nSlots        = 3
+      val nPartDistinct = 2
+      val data          = (1 to 10000).map(i => (i, (('A' + i % 25).toString * 1024).toString, i % nPartDistinct, i % nSlots))
       println("data head: " + data.head)
       val partitionkey  = "partitionkey"
       val text          = "text"
@@ -49,8 +50,9 @@ class PartitionAndSortFile extends WordSpec with Matchers {
       println("Schema: ")
       fromHdfs.printSchema() // Note the schema changes. The partition key goes to the end of the list of columns
       files.length shouldBe > (1)
+      files should have length (nSlots * nPartDistinct)
 
-      files.foreach { file =>
+      val minMaxs = files.map { file =>
         val conf = new Configuration()
         conf.setBoolean("parquet.strings.signed-min-max.enabled", true)
         val reader = ParquetFileReader.readFooter(conf, file, ParquetMetadataConverter.NO_FILTER)
@@ -66,13 +68,21 @@ class PartitionAndSortFile extends WordSpec with Matchers {
         val singleDF = session.read.parquet(file.toString)
 
         // see https://stackoverflow.com/questions/45178991/calculate-min-max-using-spark-dataframe-and-vertically-align-output
-        singleDF.describe().show() // this indeed does show the stats
+        val description = singleDF.describe()
+        description.show() // this indeed does show the stats
+        val min = description.where("summary == 'min'").select(intKey).collect()(0)
+        val max = description.where("summary == 'max'").select(intKey).collect()(0)
+        (min, max)
       }
+
+      println(s"PH: Min/max of column $intKey: ${minMaxs.mkString(", ")}")
+      println(s"PH: where min != max: ${minMaxs.filter { case(min, max) => min != max} .mkString(", ")}")
+
 
 //      Thread.sleep(Long.MaxValue)
 
-      checkOrdered(fromHdfs, intKey, nSlots)
-      checkOrdered(df, intKey, nSlots)
+      checkOrdered(fromHdfs, intKey, nSlots, nPartDistinct)
+      checkOrdered(df, intKey, nSlots, nPartDistinct)
 //      checkOrdered(data.toDF("id", text, partitionkey, intKey), intKey, nSlots, index = 3) // this blows up though. Seems DataFrame needs to be persisted for the sort to take effect
 
       val query = fromHdfs.where(s"$intKey == 3")
@@ -89,7 +99,7 @@ Note that the PushedFilters shows we're using Predicate Pushdown
     }
   }
 
-  def checkOrdered(df: DataFrame, intKey: String, nSlots: Int, index: Int = 2): Unit = {
+  def checkOrdered(df: DataFrame, intKey: String, nSlots: Int, nPartDistinct: Int, index: Int = 2): Unit = {
     import df.sqlContext.implicits._
     val intsPerPartition = df.mapPartitions { xs =>
       val ids = xs.map { _.getInt(index) }.toSet
@@ -100,7 +110,7 @@ Note that the PushedFilters shows we're using Predicate Pushdown
 
     val inMem: Array[Set[Int]] = intsPerPartition.collect()
     val nPartitions = df.rdd.partitions.size
-    val expectedNumPerSlot = nSlots / nPartitions
+    val expectedNumPerSlot = (nSlots * nPartDistinct) / nPartitions
     println(s"number of partitions = $nPartitions, expected number per slot = $expectedNumPerSlot, sizes = ${inMem.map(_.size).mkString(", ")}\n")
     withClue(s"ints in a given partition:\n${inMem.mkString("\n")}\nExpected number = $expectedNumPerSlot\nNum of partitions = $nPartitions") {
       inMem.foreach { _.size shouldBe expectedNumPerSlot +- expectedNumPerSlot.toInt }
