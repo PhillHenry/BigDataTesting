@@ -40,6 +40,8 @@ class PartitionAndSortFile extends WordSpec with Matchers {
 
 //      df.sort(intKey).write.partitionBy(partitionkey).parquet(filename)
 
+      // Basically, with this amount of data, up to 400 files are created with each one having max(intKey) == min(intKey)
+      // Over 400 files, and then we see contiguous intKey values starting to creep in.
       df.sort(intKey).write.partitionBy(partitionkey).parquet(filename)
 
       val files = list(filename).filter(_.toString.endsWith(".parquet"))
@@ -50,7 +52,7 @@ class PartitionAndSortFile extends WordSpec with Matchers {
       println("Schema: ")
       fromHdfs.printSchema() // Note the schema changes. The partition key goes to the end of the list of columns
       files.length shouldBe > (1)
-      files should have length (nSlots * nPartDistinct)
+      files should have length (nSlots * nPartDistinct) // works when (nSlots * nPartDistinct) <= 400
 
       val minMaxs = files.map { file =>
         val conf = new Configuration()
