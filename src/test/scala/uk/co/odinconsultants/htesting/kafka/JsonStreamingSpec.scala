@@ -17,6 +17,7 @@ import uk.co.odinconsultants.htesting.spark.SparkForTesting.session
 import uk.co.odinconsultants.htesting.stack.StreamingIntegrationSpec.COUNTER
 
 import scala.io.Source
+import scala.util.{Failure, Success, Try}
 
 @RunWith(classOf[JUnitRunner])
 class JsonStreamingSpec extends WordSpec with Matchers {
@@ -24,15 +25,18 @@ class JsonStreamingSpec extends WordSpec with Matchers {
   "Json" should {
     "be read from a Kafka stream" in {
 
-      val jsonFile    = "cloudtrail_pretty.json"
+      val jsonFile    = "cloudtrail.json"
       val localFile   = JsonStreamingSpec.getClass.getResource("/").getPath + s"${separator}..${separator}..${separator}src${separator}test${separator}resources${separator}data${separator}$jsonFile"
       val remoteFile  = hdfsUri + jsonFile
       distributedFS.copyFromLocalFile(new Path(localFile), new Path(remoteFile))
-      val struct: StructType = session.read.json(remoteFile).schema
+      val exampleDF = session.read.json(remoteFile)
+      println("PH: example")
+      exampleDF.printSchema()
+      val struct: StructType = exampleDF.schema
       println("PH: Schema: " + struct)
       val json = Source.fromFile(new java.io.File(localFile)).mkString
       println("PH: message size = "+ json.length)
-
+      //val cheekyJson = Source.fromFile(new java.io.File(JsonStreamingSpec.getClass.getResource("/").getPath + s"${separator}..${separator}..${separator}src${separator}test${separator}resources${separator}data${separator}gd2acl_test_event.json")).mkString
 
       val prepended   = this.getClass.getSimpleName
       val topicName   = s"${prepended}_topicName"
@@ -61,7 +65,30 @@ class JsonStreamingSpec extends WordSpec with Matchers {
 
       import org.apache.spark.sql.functions._
 
+      println("PH: df schema")
+      /*
+root
+ |-- key: binary (nullable = true)
+ |-- value: binary (nullable = true)
+ |-- topic: string (nullable = true)
+ |-- partition: integer (nullable = true)
+ |-- offset: long (nullable = true)
+ |-- timestamp: timestamp (nullable = true)
+ |-- timestampType: integer (nullable = true)
+       */
+      df.printSchema()
+
       val outgoing = jsonDF.select(from_json($"value", struct).as("item"))
+      println("PH: jsonDF schema")
+      /*
+root
+ |-- value: string (nullable = true)
+
+       */
+      jsonDF.printSchema()
+
+      println("PH: outgoing")
+      outgoing.printSchema()
 
       val sinkURL             = hdfsUri + "sinkfile"
       val checkpointFilename  = hdfsUri + "checkpoint"
@@ -86,6 +113,31 @@ class JsonStreamingSpec extends WordSpec with Matchers {
 
       println("Waiting for Spark to consume message")
       Thread.sleep(10000)
+      list(sinkURL).map(_.toString).filter(_.endsWith(".parquet")).foreach { filename => println("PH: file " + filename)
+        val readSchema = Try {
+          val fromHdfsDF = session.read.parquet(filename)
+          /* if we send corrupt JSON, the DF still have the expected schema but show() produces:
++----+
+|item|
++----+
+|  []|
+|  []|
+|  []|
+.
+.
+           */
+          println("PH: fromHdfsDF schema")
+          fromHdfsDF.printSchema()
+          fromHdfsDF.show()
+          fromHdfsDF.schema
+        } match {
+          case Failure(x) =>
+            println(s"PH: Couldn't read file $filename. Error = $x")
+            None
+          case Success(hdfsSchema) => Some(hdfsSchema)
+        }
+        readSchema.foreach( _.head.dataType shouldBe struct )
+      }
 
       COUNTER.get() shouldBe > (0)
 
