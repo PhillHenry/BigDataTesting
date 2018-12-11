@@ -10,7 +10,7 @@ object SparkForTesting {
   info("Using binaries in " + WINDOWS_BINARY_DIRECTORY)
 
   val master: String          = "local[*]"
-  val sparkConf: SparkConf    = new SparkConf().setMaster(master).setAppName("Tests")
+  val sparkConf: SparkConf    = new SparkConf().setMaster(master).setAppName("Tests").set("spark.driver.allowMultipleContexts", "true")
   sparkConf.set("spark.driver.allowMultipleContexts", "true")
   val sc: SparkContext        = SparkContext.getOrCreate(sparkConf)
   val session: SparkSession   = SparkSession.builder().getOrCreate()

@@ -89,6 +89,7 @@ class JsonStreamingSpec extends WordSpec with Matchers {
 
       COUNTER.get() shouldBe > (0)
 
+      streamingQuery.stop()
       kafkaServer.shutdown()
       zooKeeper.shutdown()
     }

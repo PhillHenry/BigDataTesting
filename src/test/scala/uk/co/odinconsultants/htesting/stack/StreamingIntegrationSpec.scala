@@ -89,6 +89,7 @@ class StreamingIntegrationSpec extends WordSpec with Matchers with Logging {
       val hiveCount   = talkToHive(sinkFile, files)
       sparkCount.toInt shouldEqual hiveCount
 
+      streamingQuery.stop()
       kafkaServer.shutdown()
       zooKeeper.shutdown()
     }
@@ -127,7 +128,7 @@ class StreamingIntegrationSpec extends WordSpec with Matchers with Logging {
     //    Thread.sleep(Long.MaxValue)
     recognisePartitions(files, table_name, stmt)
     val count = countAllRows(table_name, stmt)
-    con.close()
+//    con.close()
     count
   }
 
