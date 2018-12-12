@@ -88,6 +88,23 @@ root
       jsonDF.printSchema()
 
       println("PH: outgoing")
+      /* as exampleDF but wrapped in an "item" node
+root
+ |-- item: struct (nullable = true)
+ |    |-- Records: array (nullable = true)
+ |    |    |-- element: struct (containsNull = true)
+ |    |    |    |-- additionalEventData: struct (nullable = true)
+ |    |    |    |    |-- SSEApplied: string (nullable = true)
+ |    |    |    |    |-- x-amz-id-2: string (nullable = true)
+ |    |    |    |-- awsRegion: string (nullable = true)
+ |    |    |    |-- errorCode: string (nullable = true)
+ |    |    |    |-- errorMessage: string (nullable = true)
+ |    |    |    |-- eventID: string (nullable = true)
+ |    |    |    |-- eventName: string (nullable = true)
+ .
+ .
+ .
+       */
       outgoing.printSchema()
 
       val sinkURL             = hdfsUri + "sinkfile"
@@ -113,8 +130,8 @@ root
 
       println("Waiting for Spark to consume message")
       Thread.sleep(10000)
-      list(sinkURL).map(_.toString).filter(_.endsWith(".parquet")).foreach { filename => println("PH: file " + filename)
-        val readSchema = Try {
+      val readSchema = list(sinkURL).map(_.toString).filter(_.endsWith(".parquet")).map { filename => println("PH: file " + filename)
+        Try {
           val fromHdfsDF = session.read.parquet(filename)
           /* if we send corrupt JSON, the DF still have the expected schema but show() produces:
 +----+
@@ -130,14 +147,11 @@ root
           fromHdfsDF.printSchema()
           fromHdfsDF.show()
           fromHdfsDF.schema
-        } match {
-          case Failure(x) =>
-            println(s"PH: Couldn't read file $filename. Error = $x")
-            None
-          case Success(hdfsSchema) => Some(hdfsSchema)
         }
-        readSchema.foreach( _.head.dataType shouldBe struct )
       }
+      val read = readSchema.filter(_.isSuccess) // some files appear only partially written. Not sure why.
+      read.length should be >(0)
+      read.map(_.get).foreach( _.head.dataType shouldBe struct )
 
       COUNTER.get() shouldBe > (0)
 
