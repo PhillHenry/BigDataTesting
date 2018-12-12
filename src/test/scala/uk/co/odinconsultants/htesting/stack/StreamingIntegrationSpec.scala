@@ -52,7 +52,7 @@ class StreamingIntegrationSpec extends WordSpec with Matchers with Logging {
     val today     = new java.sql.Date(new java.util.Date().getTime)
     val yesterday = new java.sql.Date(today.getTime - (3600 * 1000 * 24))
     df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)").as[(String, String)].map { case (key, value) =>
-      println(s"key = $key")
+      //println(s"key = $key")
       COUNTER.incrementAndGet()
       (key, value, if (math.random < 0.5) today else yesterday)
     }.withColumnRenamed("_1", "key").withColumnRenamed("_2", "value").withColumnRenamed("_3", partitionField).asInstanceOf[StreamType]

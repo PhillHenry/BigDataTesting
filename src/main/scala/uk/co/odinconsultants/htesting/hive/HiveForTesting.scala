@@ -35,6 +35,8 @@ object HiveForTesting extends Logging {
   hiveConf.set("hive.execution.engine",               "spark")
   hiveConf.set("hive.server2.thrift.port",            hiveThriftPort.toString)
   hiveConf.set("spark.master",                        SparkForTesting.master)
+  hiveConf.set("fs.file.impl",                        classOf[org.apache.hadoop.fs.LocalFileSystem].getName)
+  hiveConf.set("fs.hdfs.impl",                        classOf[org.apache.hadoop.hdfs.DistributedFileSystem].getName)
   info("Hive conf: " + hiveConf.getAllProperties)
 
   val derbyHome: String = tmpDirectory("derby").getAbsolutePath

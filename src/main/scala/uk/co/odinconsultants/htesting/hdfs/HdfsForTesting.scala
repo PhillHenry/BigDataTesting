@@ -18,7 +18,11 @@ object HdfsForTesting extends Logging {
   val user = System.getProperty("user.name")
   conf.set(s"hadoop.proxyuser.$user.groups",      "*")
   conf.set(s"hadoop.proxyuser.$user.hosts",       "*")
-  conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, baseDir.getAbsolutePath)
+  conf.set("fs.file.impl",                        classOf[org.apache.hadoop.fs.LocalFileSystem].getName)
+  conf.set("fs.hdfs.impl",                        classOf[org.apache.hadoop.hdfs.DistributedFileSystem].getName)
+  val path: String = baseDir.getAbsolutePath
+  info(s"path = $path")
+  conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, path)
   val builder = new MiniDFSCluster.Builder(conf)
 
   info("Attempting to start HDFS")
