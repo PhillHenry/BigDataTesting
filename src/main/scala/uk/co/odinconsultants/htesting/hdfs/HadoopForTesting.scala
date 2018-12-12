@@ -37,6 +37,11 @@ object HadoopForTesting extends Logging {
     val nativeCodeLoadedField = classOf[org.apache.hadoop.util.NativeCodeLoader].getDeclaredField("nativeCodeLoaded")
     nativeCodeLoadedField.setAccessible(true)
     nativeCodeLoadedField.set(null, false)
+
+    val HADOOP_HOME_DIR = classOf[org.apache.hadoop.util.Shell].getDeclaredField("HADOOP_HOME_DIR")
+    HADOOP_HOME_DIR.setAccessible(true)
+    HADOOP_HOME_DIR.set(null, WINDOWS_BINARY_DIRECTORY)
+    info("HADOOP_HOME_DIR set to " + org.apache.hadoop.util.Shell.getHadoopHome)
   } else {
     info("PH: Not a windows system, not using binaries")
   }

@@ -145,7 +145,7 @@
         <version>2.18.1</version>
         <configuration>
           <useFile>false</useFile>
-          <disableXmlReport>true</disableXmlReport>
+          <disableXmlReport>false</disableXmlReport>
           <forkMode>always</forkMode> <!-- Hive keeps closing down Spark contexts -->
           <!-- If you have classpath issue like NoDefClassError,... -->
           <!-- useManifestOnlyJar>false</useManifestOnlyJar -->
