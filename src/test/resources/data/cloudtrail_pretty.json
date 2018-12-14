@@ -821,8 +821,8 @@
             "userIdentity": {
                 "accessKeyId": "ASIAW7K7YN5YQ6P6HUIM",
                 "accountId": "479626555249",
-                "arn": "arn:aws:sts::479626555249:assumed-role/FullAdmin/robert.morgan5@vodafone.com",
-                "principalId": "AROAJ5OL45FHGRXIMCKOW:robert.morgan5@vodafone.com",
+                "arn": "arn:aws:sts::479626555249:assumed-role/FullAdmin/jose5@funkychicken.com",
+                "principalId": "AROAJ5OL45FHGRXIMCKOW:jose5@funkychicken.com",
                 "sessionContext": {
                     "attributes": {
                         "creationDate": "2018-12-05T14:18:13Z",
