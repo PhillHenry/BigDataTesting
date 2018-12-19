@@ -112,7 +112,7 @@ Note that the PushedFilters shows we're using Predicate Pushdown
 
     val inMem: Array[Set[Int]] = intsPerPartition.collect()
     val nPartitions = df.rdd.partitions.size
-    val expectedNumPerSlot = (nSlots * nPartDistinct) / nPartitions
+    val expectedNumPerSlot = math.min((nSlots * nPartDistinct) / nPartitions, 1)
     println(s"number of partitions = $nPartitions, expected number per slot = $expectedNumPerSlot, sizes = ${inMem.map(_.size).mkString(", ")}\n")
     withClue(s"ints in a given partition:\n${inMem.mkString("\n")}\nExpected number = $expectedNumPerSlot\nNum of partitions = $nPartitions") {
       inMem.foreach { _.size shouldBe expectedNumPerSlot +- expectedNumPerSlot.toInt }
