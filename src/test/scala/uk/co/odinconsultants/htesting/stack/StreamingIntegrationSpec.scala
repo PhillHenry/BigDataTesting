@@ -75,9 +75,10 @@ class StreamingIntegrationSpec extends WordSpec with Matchers with Logging {
 
       ensureMesagesSent(streamingQuery)
 
-      val files       = checkSparkProcessedMessages(sinkFile)
-
-      files.filter(_.toString.endsWith(".parquet")).foreach { f =>
+      val files         = checkSparkProcessedMessages(sinkFile)
+      val parquetFiles  = files.filter(_.toString.endsWith(".parquet"))
+      info(s"Number of files: ${parquetFiles.size}")
+      parquetFiles.foreach { f =>
         val df = session.read.parquet(f.toString)
         println(s"df.count = ${df.count()}")
       }
