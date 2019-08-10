@@ -4,16 +4,23 @@ import java.io.File.separator
 
 import uk.co.odinconsultants.htesting.log.Logging
 
+import scala.util.{Failure, Success, Try}
+
 class HadoopForTesting
 
 object HadoopForTesting extends Logging {
 
   val WINDOWS_BINARY_DIRECTORY: String = {
-    val location    = classOf[HadoopForTesting].getProtectionDomain.getCodeSource.getLocation.getFile.replace("/", separator)
-    val minusTarge  = location.substring(0, location.indexOf("target"))
-    val path        = (minusTarge + "src" + separator + "main" + separator + "resources" + separator).substring(1)
-    info(s"PH: path = $path")
-    path
+    Try {
+      val location = classOf[HadoopForTesting].getProtectionDomain.getCodeSource.getLocation.getFile.replace("/", separator)
+      val minusTarge = location.substring(0, location.indexOf("target"))
+      val path = (minusTarge + "src" + separator + "main" + separator + "resources" + separator).substring(1)
+      info(s"PH: path = $path")
+      path
+    } match {
+      case Success(x) => x
+      case Failure(x) => x.getMessage
+    }
   }
 
   if (System.getProperty("os.name").toLowerCase.indexOf("win") != -1) {
