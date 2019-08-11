@@ -11,9 +11,9 @@
     <maven.compiler.source>1.6</maven.compiler.source>
     <maven.compiler.target>1.6</maven.compiler.target>
     <encoding>UTF-8</encoding>
-    <scala.version>2.11.5</scala.version>
-    <scala.compat.version>2.11</scala.compat.version>
-    <spark.version>2.4.0</spark.version>
+    <scala.version>2.12.8</scala.version>
+    <scala.compat.version>2.12</scala.compat.version>
+    <spark.version>2.4.3</spark.version>
     <kafka.version>1.1.0</kafka.version>
     <hadoop.version>2.6.5</hadoop.version>
     <hive.version>3.1.1</hive.version>
@@ -34,18 +34,26 @@
     </dependency>
     <dependency>
       <groupId>org.scalanlp</groupId>
-      <artifactId>breeze_2.11</artifactId>
+      <artifactId>breeze_${scala.compat.version}</artifactId>
       <version>0.13.2</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
+      <scope>provided</scope>
     </dependency>
+<!--    <dependency>-->
+<!--      <groupId>org.scalautils</groupId>-->
+<!--      <artifactId>scalautils_${scala.compat.version}</artifactId>-->
+<!--      <version>2.1.7</version>-->
+<!--      <scope>test</scope>-->
+<!--    </dependency>-->
     <dependency>
-      <groupId>org.scalautils</groupId>
-      <artifactId>scalautils_2.11</artifactId>
-      <version>2.1.7</version>
+      <groupId>org.scalactic</groupId>
+      <artifactId>scalactic_${scala.compat.version}</artifactId>
+      <version>3.0.8</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -56,28 +64,30 @@
     <dependency>
       <groupId>org.specs2</groupId>
       <artifactId>specs2-core_${scala.compat.version}</artifactId>
-      <version>2.4.16</version>
+      <version>4.7.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.compat.version}</artifactId>
-      <version>2.2.6</version>
+      <version>3.1.0-RC1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.11</artifactId>
+      <artifactId>spark-core_${scala.compat.version}</artifactId>
       <version>${spark.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-mllib_2.11</artifactId>
+      <artifactId>spark-mllib_${scala.compat.version}</artifactId>
       <version>${spark.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-sql-kafka-0-10_2.11</artifactId>
+      <artifactId>spark-sql-kafka-0-10_${scala.compat.version}</artifactId>
       <version>${spark.version}</version> <!-- org.apache.kafka:kafka-clients -->
       <exclusions>
         <exclusion>
@@ -85,38 +95,45 @@
           <artifactId>kafka-clients</artifactId>
         </exclusion>
       </exclusions>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka_2.11</artifactId>
+      <artifactId>kafka_${scala.compat.version}</artifactId>
       <version>${kafka.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minicluster</artifactId>
       <version>${hadoop.version}</version>
+      <scope>provided</scope>
     </dependency>
     <!-- Need Hive 3 to work with Spark 2.3 -->
     <dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-service</artifactId>
       <version>${hive.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-jdbc</artifactId>
       <version>${hive.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>1.7.25</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.parquet</groupId>
       <artifactId>parquet</artifactId>
       <version>1.10.0</version>
       <type>pom</type>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -124,6 +141,24 @@
     <sourceDirectory>src/main/scala</sourceDirectory>
     <testSourceDirectory>src/test/scala</testSourceDirectory>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+            <configuration>
+              <keyname>ossrh</keyname>
+              <passphraseServerId>ossrh</passphraseServerId>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <!-- see http://davidb.github.com/scala-maven-plugin -->
         <groupId>net.alchim31.maven</groupId>
