@@ -153,7 +153,6 @@
               <goal>sign</goal>
             </goals>
             <configuration>
-              <keyname>ossrh</keyname>
               <passphraseServerId>ossrh</passphraseServerId>
             </configuration>
           </execution>
@@ -238,4 +237,12 @@
 
     </plugins>
   </build>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+
 </project>
