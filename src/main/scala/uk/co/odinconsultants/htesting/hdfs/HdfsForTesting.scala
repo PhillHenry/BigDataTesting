@@ -1,11 +1,14 @@
 package uk.co.odinconsultants.htesting.hdfs
 
+import java.io.{BufferedInputStream, BufferedReader, InputStreamReader}
+
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hdfs.MiniDFSCluster
 import uk.co.odinconsultants.htesting.local.TestingFileUtils.tmpDirectory
 import uk.co.odinconsultants.htesting.log.Logging
 
+import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 
 object HdfsForTesting extends Logging {
@@ -31,6 +34,24 @@ object HdfsForTesting extends Logging {
   val hdfsCluster = builder.build()
   val distributedFS = hdfsCluster.getFileSystem
   val hdfsUri = "hdfs://127.0.0.1:" + hdfsCluster.getNameNodePort + "/"
+
+  def readAsString(path: String): String = {
+    val dis       = distributedFS.open(new Path(path))
+    val buffered  = new BufferedReader(new InputStreamReader(dis))
+
+    @tailrec
+    def readFile(acc: String, line: String): String = {
+      if (line == null) {
+        acc
+      } else {
+        readFile(acc + line, buffered.readLine())
+      }
+    }
+
+    val contents = readFile("", buffered.readLine())
+    buffered.close()
+    contents
+  }
 
   def list(path: String): List[Path] = {
     info(s"Looking in $path")
