@@ -21,7 +21,7 @@ object HadoopForTesting extends Logging {
       path
     } match {
       case Success(x) => x
-      case Failure(x) => x.getMessage
+      case Failure(x) => s"Put an (empty) ${classOf[HadoopForTesting].getCanonicalName} in your code in the module that has the Hadoop binaries"
     }
   }
 
@@ -30,7 +30,7 @@ object HadoopForTesting extends Logging {
     val JAVA_LIBRARY_PATH = "java.library.path"
     val HADOOP_HOME       = "hadoop.home.dir"
     System.setProperty(JAVA_LIBRARY_PATH, WINDOWS_BINARY_DIRECTORY )
-    System.setProperty(HADOOP_HOME,   WINDOWS_BINARY_DIRECTORY)
+    System.setProperty(HADOOP_HOME,       WINDOWS_BINARY_DIRECTORY)
 
     val classLoader = this.getClass.getClassLoader
     Try {

@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>uk.co.odinconsultants</groupId>
   <artifactId>BigDataTesting_${scala.compat.version}</artifactId>
-  <version>0.5</version>
+  <version>0.6</version>
   <name>${project.artifactId}</name>
   <description>Test HDFS, Spark, Hive, Kafka etc all in a single JVM</description>
   <inceptionYear>2018</inceptionYear>
