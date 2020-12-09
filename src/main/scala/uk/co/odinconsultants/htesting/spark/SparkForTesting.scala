@@ -7,8 +7,6 @@ object SparkForTesting {
 
   import uk.co.odinconsultants.htesting.hdfs.HadoopForTesting._
 
-  info("Using binaries in " + WINDOWS_BINARY_DIRECTORY)
-
   val master: String          = "local[*]"
   val sparkConf: SparkConf    = new SparkConf().setMaster(master).setAppName("Tests").set("spark.driver.allowMultipleContexts", "true")
   sparkConf.set("spark.driver.allowMultipleContexts", "true")

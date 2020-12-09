@@ -13,8 +13,6 @@ import scala.collection.mutable.ArrayBuffer
 
 object HdfsForTesting extends Logging {
 
-  info("Initiating HDFS with WINDOWS_BINARY_DIRECTORY as: " + HadoopForTesting.WINDOWS_BINARY_DIRECTORY)
-
   val baseDir = tmpDirectory("tests").getAbsoluteFile
   val conf = new Configuration()
   // see https://stackoverflow.com/questions/43180305/cannot-connect-to-hive-using-beeline-user-root-cannot-impersonate-anonymous
