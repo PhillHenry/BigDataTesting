@@ -98,6 +98,10 @@ class PartitionAndSortFileSpec extends WordSpec with Matchers {
 Note that the PushedFilters shows we're using Predicate Pushdown
        */
       query.show()
+
+      val otherDf = (1 to 1000).map(i => (i, (('A' + i % 25).toString * 1024).toString, i % nPartDistinct, i % nSlots)).toDF("id", text, partitionkey, intKey).repartition(4)
+      println(s"Number of partitions = ${df.rdd.partitions.length} and ${otherDf.rdd.partitions.length}")
+      println(s"Number of partitions in cross joins = ${df.crossJoin(otherDf).rdd.partitions.length}")
     }
   }
 
