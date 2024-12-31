@@ -24,10 +24,10 @@
 
 
   <properties>
-    <maven.compiler.source>1.6</maven.compiler.source>
-    <maven.compiler.target>1.6</maven.compiler.target>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
     <encoding>UTF-8</encoding>
-    <scala.version>2.12.8</scala.version>
+    <scala.version>2.12.20</scala.version>
     <scala.compat.version>2.12</scala.compat.version>
     <spark.version>2.4.3</spark.version>
     <kafka.version>1.1.0</kafka.version>
@@ -158,7 +158,7 @@
                 <plugin>
                     <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
-                    <version>4.0.1</version>
+                    <version>4.9.2</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
